@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Roxbox</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Dancing+Script:wght@700&display=swap">
+    <link rel="stylesheet" href="/css/theme.css">
+    <link rel="stylesheet" href="/css/app.css">
+    <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+    <!-- Bộ icon (stroke 2px, viewBox 24) — thêm icon mới vào đây, dùng: <svg class="icon"><use href="#i-ten"/></svg> -->
+    <svg xmlns="http://www.w3.org/2000/svg" hidden>
+        <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></symbol>
+        <symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol>
+        <symbol id="i-type" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></symbol>
+        <symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></symbol>
+        <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+        <symbol id="i-film" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/></symbol>
+        <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
+        <symbol id="i-archive" viewBox="0 0 24 24"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></symbol>
+        <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+        <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></symbol>
+        <symbol id="i-cloud-upload" viewBox="0 0 24 24"><path d="M12 13v8"/><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="m8 17 4-4 4 4"/></symbol>
+        <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+        <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+        <symbol id="i-external" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+        <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></symbol>
+        <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></symbol>
+        <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></symbol>
+        <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></symbol>
+        <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+        <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+        <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></symbol>
+        <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></symbol>
+        <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></symbol>
+        <symbol id="i-grid" viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></symbol>
+        <symbol id="i-list" viewBox="0 0 24 24"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></symbol>
+        <symbol id="i-drive" viewBox="0 0 24 24"><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></symbol>
+        <symbol id="i-id-card" viewBox="0 0 24 24"><path d="M16 10h2"/><path d="M16 14h2"/><path d="M6.17 15a3 3 0 0 1 5.66 0"/><circle cx="9" cy="11" r="2"/><rect x="2" y="5" width="20" height="14" rx="2"/></symbol>
+        <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/></symbol>
+        <symbol id="i-regex" viewBox="0 0 24 24"><path d="M17 3v10"/><path d="m12.67 5.5 8.66 5"/><path d="m12.67 10.5 8.66-5"/><path d="M9 17a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2z"/></symbol>
+        <symbol id="i-code" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></symbol>
+        <symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+        <symbol id="i-sticky" viewBox="0 0 24 24"><path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/></symbol>
+        <symbol id="i-braces" viewBox="0 0 24 24"><path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/></symbol>
+        <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+    </svg>
+
+    <a class="skip-link" href="#main">Bỏ qua, tới nội dung chính</a>
+
+    <!-- ================= Đăng nhập / Đăng ký ================= -->
+    <main id="auth-view" class="auth" hidden>
+        <section class="auth-card glass-card glass-card--banner" aria-labelledby="auth-heading">
+            <h1 class="rx-title brand-name" id="auth-heading" data-site-name>Roxbox</h1>
+
+            <div class="tabs" role="tablist" aria-label="Chọn hình thức">
+                <button type="button" role="tab" class="tab" id="tab-login" data-mode="login" aria-selected="true">Đăng nhập</button>
+                <button type="button" role="tab" class="tab" id="tab-register" data-mode="register" aria-selected="false">Tạo tài khoản</button>
+            </div>
+
+            <form id="auth-form" class="auth-form" novalidate>
+                <div class="field">
+                    <label for="auth-username">Username</label>
+                    <input id="auth-username" name="username" class="input" autocomplete="username"
+                           autocapitalize="off" spellcheck="false" required
+                           aria-describedby="auth-username-hint auth-username-error">
+                    <p class="field-hint" id="auth-username-hint" data-register-only hidden></p>
+                    <p class="field-error" id="auth-username-error"></p>
+                </div>
+                <div class="field">
+                    <label for="auth-password">Mật khẩu</label>
+                    <div class="input-wrap">
+                        <input id="auth-password" name="password" type="password" class="input"
+                               autocomplete="current-password" required
+                               aria-describedby="auth-password-hint auth-password-error">
+                        <button type="button" class="icon-btn input-addon" id="toggle-password"
+                                aria-label="Hiện mật khẩu" aria-pressed="false">
+                            <svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg>
+                        </button>
+                    </div>
+                    <p class="field-hint" id="auth-password-hint" data-register-only hidden></p>
+                    <p class="field-error" id="auth-password-error"></p>
+                </div>
+                <p class="form-error" id="auth-error" role="alert"></p>
+                <button type="submit" class="btn btn--primary btn--block" id="auth-submit"><span>Đăng nhập</span></button>
+            </form>
+        </section>
+        <p class="rx-tagline">The greatest story with roxie</p>
+    </main>
+
+    <!-- ================= Ứng dụng ================= -->
+    <div id="app-view" class="shell" hidden>
+        <aside class="sidebar glass-panel" aria-label="Thanh bên">
+            <span class="rx-title brand-name sidebar-brand" data-site-name>Roxbox</span>
+
+            <div class="user-chip">
+                <span class="rx-avatar" id="user-avatar" aria-hidden="true">R</span>
+                <div class="user-info">
+                    <div class="user-name" id="user-name"></div>
+                </div>
+            </div>
+
+            <nav class="nav" aria-label="Thư mục">
+                <a class="nav-item" href="#/all" data-cat="all">
+                    <svg class="icon" aria-hidden="true"><use href="#i-layers"/></svg>
+                    <span class="nav-label">Tất cả</span>
+                    <span class="nav-count" data-count="all">0</span>
+                </a>
+                <a class="nav-item" href="#/image" data-cat="image">
+                    <svg class="icon" aria-hidden="true"><use href="#i-image"/></svg>
+                    <span class="nav-label">Ảnh</span>
+                    <span class="nav-count" data-count="image">0</span>
+                </a>
+                <a class="nav-item" href="#/font" data-cat="font">
+                    <svg class="icon" aria-hidden="true"><use href="#i-type"/></svg>
+                    <span class="nav-label">Font</span>
+                    <span class="nav-count" data-count="font">0</span>
+                </a>
+                <a class="nav-item" href="#/card" data-cat="card">
+                    <svg class="icon" aria-hidden="true"><use href="#i-id-card"/></svg>
+                    <span class="nav-label">Card</span>
+                    <span class="nav-count" data-count="card">0</span>
+                </a>
+                <a class="nav-item" href="#/file" data-cat="file">
+                    <svg class="icon" aria-hidden="true"><use href="#i-file"/></svg>
+                    <span class="nav-label">File</span>
+                    <span class="nav-count" data-count="file">0</span>
+                </a>
+            </nav>
+
+            <div class="storage">
+                <div class="storage-head">
+                    <svg class="icon" aria-hidden="true"><use href="#i-drive"/></svg>
+                    <span>Dung lượng đã dùng</span>
+                </div>
+                <div class="storage-total" id="storage-total">0 B</div>
+                <div class="meter" id="storage-meter" aria-hidden="true">
+                    <span class="meter-seg meter-seg--image"></span>
+                    <span class="meter-seg meter-seg--font"></span>
+                    <span class="meter-seg meter-seg--card"></span>
+                    <span class="meter-seg meter-seg--file"></span>
+                </div>
+                <ul class="storage-legend" id="storage-legend"></ul>
+            </div>
+
+            <button type="button" class="btn btn--danger btn--block logout-btn" id="logout-btn">
+                <svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg><span>Đăng xuất</span>
+            </button>
+        </aside>
+
+        <main id="main" class="main" tabindex="-1">
+            <header class="toolbar glass-panel">
+                <div class="search">
+                    <svg class="icon search-icon" aria-hidden="true"><use href="#i-search"/></svg>
+                    <label class="sr-only" for="search-input">Tìm kiếm file</label>
+                    <input id="search-input" type="search" class="input search-input" autocomplete="off"
+                           placeholder="Tìm theo tên, đuôi file hoặc mã link…">
+                    <kbd class="search-kbd" aria-hidden="true">/</kbd>
+                </div>
+                <label class="sr-only" for="sort-select">Sắp xếp</label>
+                <select id="sort-select" class="input sort-select">
+                    <option value="new">Mới nhất</option>
+                    <option value="old">Cũ nhất</option>
+                    <option value="name">Tên A → Z</option>
+                    <option value="size">Dung lượng lớn nhất</option>
+                </select>
+                <div class="segmented" role="group" aria-label="Kiểu hiển thị">
+                    <button type="button" class="icon-btn" data-view="grid" aria-label="Dạng lưới" aria-pressed="true">
+                        <svg class="icon" aria-hidden="true"><use href="#i-grid"/></svg>
+                    </button>
+                    <button type="button" class="icon-btn" data-view="list" aria-label="Dạng danh sách" aria-pressed="false">
+                        <svg class="icon" aria-hidden="true"><use href="#i-list"/></svg>
+                    </button>
+                </div>
+                <button type="button" class="btn btn--primary" id="upload-btn">
+                    <svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg><span>Upload</span>
+                </button>
+                <input type="file" id="file-input" multiple hidden>
+            </header>
+
+            <section class="dropzone glass-card glass-card--banner" id="dropzone" aria-label="Upload file">
+                <button type="button" class="dropzone-target" id="dropzone-target">
+                    <svg class="icon dz-icon" aria-hidden="true"><use href="#i-cloud-upload"/></svg>
+                    <span class="dz-title">Kéo thả file vào đây hoặc bấm để chọn</span>
+                </button>
+                <div class="queue" id="queue" hidden>
+                    <div class="queue-head">
+                        <span class="rx-note-label">Vừa upload</span>
+                        <div class="queue-actions">
+                            <button type="button" class="btn btn--sm" id="queue-copy-all">
+                                <svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy tất cả link</span>
+                            </button>
+                            <button type="button" class="btn btn--sm" id="queue-clear"><span>Ẩn danh sách</span></button>
+                        </div>
+                    </div>
+                    <ul class="queue-list" id="queue-list"></ul>
+                </div>
+            </section>
+
+            <section class="library" aria-labelledby="section-title">
+                <div class="library-head">
+                    <h2 class="rx-title section-title" id="section-title">Tất cả file</h2>
+                    <p class="rx-meta section-meta" id="section-meta" aria-live="polite"></p>
+                </div>
+
+                <div class="font-tools glass-card glass-card--user" id="font-tools" hidden>
+                    <div class="field font-tools-sample">
+                        <label for="sample-input">Câu mẫu</label>
+                        <input id="sample-input" class="input" maxlength="200">
+                    </div>
+                    <div class="field font-tools-size">
+                        <label for="size-range">Cỡ chữ <output id="size-out" for="size-range"></output></label>
+                        <input type="range" id="size-range" min="14" max="72" step="1">
+                    </div>
+                    <button type="button" class="btn btn--sm" id="sample-reset">
+                        <svg class="icon" aria-hidden="true"><use href="#i-rotate"/></svg><span>Câu mặc định</span>
+                    </button>
+                </div>
+
+                <div class="file-grid" id="file-grid"></div>
+
+                <div class="empty glass-card" id="empty-state" hidden>
+                    <svg class="icon empty-icon" aria-hidden="true"><use href="#i-cloud-upload"/></svg>
+                    <h3 class="empty-title" id="empty-title"></h3>
+                    <p class="empty-text" id="empty-text"></p>
+                    <button type="button" class="btn" id="empty-action"></button>
+                </div>
+            </section>
+
+            <p class="rx-tagline">The greatest story with roxie</p>
+        </main>
+    </div>
+
+    <!-- ================= Chi tiết file ================= -->
+    <dialog id="detail-dialog" class="popup detail" aria-labelledby="detail-title">
+        <div class="detail-head">
+            <h2 class="rx-title detail-title" id="detail-title">Chi tiết</h2>
+            <button type="button" class="icon-btn" data-close aria-label="Đóng">
+                <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
+            </button>
+        </div>
+        <div class="detail-body">
+            <div class="detail-preview" id="detail-preview"></div>
+            <div class="detail-info">
+                <form class="field" id="rename-form">
+                    <label for="detail-name">Tên file</label>
+                    <div class="input-row">
+                        <input id="detail-name" class="input" maxlength="200" required>
+                        <button type="submit" class="btn" id="rename-submit">
+                            <svg class="icon" aria-hidden="true"><use href="#i-pencil"/></svg><span>Đổi tên</span>
+                        </button>
+                    </div>
+                </form>
+                <div class="field">
+                    <label for="detail-link">Link chia sẻ</label>
+                    <div class="input-row">
+                        <input id="detail-link" class="input mono" readonly>
+                        <button type="button" class="btn btn--primary" id="detail-copy">
+                            <svg class="icon" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span>
+                        </button>
+                    </div>
+                </div>
+                <dl class="detail-meta" id="detail-meta"></dl>
+                <section class="embeds" id="detail-embeds" aria-label="Nội dung nhúng" hidden></section>
+                <div class="detail-actions">
+                    <a class="btn" id="detail-open" target="_blank" rel="noopener">
+                        <svg class="icon" aria-hidden="true"><use href="#i-external"/></svg><span>Mở</span>
+                    </a>
+                    <a class="btn" id="detail-download">
+                        <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg><span>Tải xuống</span>
+                    </a>
+                    <button type="button" class="btn btn--danger detail-delete" id="detail-delete">
+                        <svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg><span>Xoá</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- ================= Xác nhận ================= -->
+    <dialog id="confirm-dialog" class="popup confirm" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+        <form method="dialog" class="confirm-body">
+            <h2 class="confirm-title" id="confirm-title">Xoá file?</h2>
+            <p class="confirm-text" id="confirm-text"></p>
+            <div class="confirm-actions">
+                <button type="submit" class="btn" value="cancel" autofocus>Huỷ</button>
+                <button type="submit" class="btn btn--danger" value="ok" id="confirm-ok">
+                    <svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg><span>Xoá vĩnh viễn</span>
+                </button>
+            </div>
+        </form>
+    </dialog>
+
+    <div class="drop-overlay" id="drop-overlay" hidden>
+        <div class="drop-overlay-inner glass-card">
+            <svg class="icon" aria-hidden="true"><use href="#i-cloud-upload"/></svg>
+            <span class="rx-title">Thả để upload</span>
+        </div>
+    </div>
+
+    <div id="toast-container" popover="manual" aria-live="polite"></div>
+</body>
+</html>
