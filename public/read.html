@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>{{title}}</title>
+    <meta name="description" content="{{description}}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{siteName}}">
+    <meta property="og:title" content="{{name}}">
+    <meta property="og:description" content="{{description}}">
+    {{ogImage}}
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Dancing+Script:wght@700&display=swap">
+    <link rel="stylesheet" href="/css/theme.css">
+    <link rel="stylesheet" href="/css/app.css">
+    <script type="module" src="/js/read.js"></script>
+</head>
+<body>
+    {{icons}}
+
+    <!-- ================= Trang đọc card công khai /r/<mã> ================= -->
+    <main class="read" id="main">
+        <header class="read-head glass-card">
+            <img class="read-avatar" id="read-avatar" alt="" hidden>
+            <div class="read-info">
+                <h1 class="rx-title read-title" id="read-title">{{name}}</h1>
+                <p class="rx-meta read-meta" id="read-meta"></p>
+            </div>
+            <div class="read-actions">
+                <button type="button" class="btn btn--sm" id="read-copy">
+                    <svg class="icon" aria-hidden="true"><use href="#i-link"/></svg><span>Copy link</span>
+                </button>
+                <a class="btn btn--sm btn--primary" id="read-download" hidden>
+                    <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg><span>Tải card</span>
+                </a>
+            </div>
+        </header>
+        <div class="reader-tabs" role="tablist" aria-label="Nội dung card" id="reader-tabs"></div>
+        <div class="reader-body read-body" id="reader-body"></div>
+        <p class="rx-tagline">The greatest story with roxie · <a class="read-brand" href="/">{{siteName}}</a></p>
+        <p class="sr-only" id="read-msg" aria-live="polite"></p>
+    </main>
+</body>
+</html>

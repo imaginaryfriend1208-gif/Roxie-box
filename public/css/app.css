@@ -726,6 +726,43 @@
 }
 .reader[open] { display: flex; flex-direction: column; }
 .reader .detail-head { flex: none; }
+.reader-head-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+
+/* Trang đọc công khai /r/<mã>: cùng trình đọc, chiếm cả màn hình */
+.read {
+    width: min(1240px, 100%);
+    height: 100dvh;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    padding: var(--rx-space-4) var(--rx-space-4) var(--rx-space-3);
+}
+.read-head {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+    padding: 14px 18px;
+}
+.read-avatar {
+    width: 56px;
+    height: 56px;
+    flex: none;
+    object-fit: cover;
+    object-position: top;
+    border-radius: var(--rx-radius-md);
+    border: 1px solid var(--rx-glass-border);
+}
+.read-info { flex: 1 1 240px; min-width: 0; }
+.read-title { --rx-name-size: 34px; margin: 0; overflow-wrap: anywhere; }
+.read-meta { margin: 2px 0 0; overflow-wrap: anywhere; }
+.read-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.read .reader-tabs { margin: 12px 0 0; }
+.read-body { padding: 12px 0 0; }
+.read .rx-tagline { flex: none; }
+.read-brand { color: inherit; }
+.read-brand:hover { color: var(--rx-text-strong); }
 
 .reader-tabs {
     flex: none;
@@ -992,6 +1029,12 @@
     .reader-tabs { margin: 10px 14px 0; }
     .reader-body { padding: 10px 14px 14px; }
     .reader-tab { min-height: 44px; }
+    .reader .detail-head { flex-wrap: wrap; }
+    .reader-head-actions .btn span { display: none; }
+    .read { padding: var(--rx-space-2) var(--rx-space-2) var(--rx-space-2); }
+    .read-head { padding: 12px 14px; }
+    .read-avatar { width: 44px; height: 44px; }
+    .read-title { --rx-name-size: 28px; }
     /* Điện thoại: một cột — danh sách, bấm mục thì chuyển sang nội dung (có nút quay lại) */
     .reader-split { grid-template-columns: minmax(0, 1fr); }
     .reader-split:not(.is-viewing) .reader-view,

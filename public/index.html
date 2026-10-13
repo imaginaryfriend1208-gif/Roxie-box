@@ -291,9 +291,17 @@
     <dialog id="reader-dialog" class="popup reader" aria-labelledby="reader-title">
         <div class="detail-head">
             <h2 class="rx-title detail-title" id="reader-title">Đọc card</h2>
-            <button type="button" class="icon-btn" data-close aria-label="Đóng">
-                <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
-            </button>
+            <div class="reader-head-actions">
+                <button type="button" class="btn btn--sm btn--primary" id="reader-share" aria-label="Copy link đọc card">
+                    <svg class="icon" aria-hidden="true"><use href="#i-link"/></svg><span>Copy link đọc</span>
+                </button>
+                <a class="icon-btn" id="reader-open" target="_blank" rel="noopener" aria-label="Mở trang đọc công khai" title="Mở trang đọc công khai">
+                    <svg class="icon" aria-hidden="true"><use href="#i-external"/></svg>
+                </a>
+                <button type="button" class="icon-btn" data-close aria-label="Đóng">
+                    <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
+                </button>
+            </div>
         </div>
         <div class="reader-tabs" role="tablist" aria-label="Nội dung card" id="reader-tabs"></div>
         <div class="reader-body" id="reader-body"></div>

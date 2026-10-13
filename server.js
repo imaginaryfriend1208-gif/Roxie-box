@@ -220,6 +220,25 @@ async function handleCardRead(_req, res, user, id) {
   sendJson(res, 200, readableCard(card));
 }
 
+// Link đọc công khai /r/<mã>: ai có mã đều đọc được — giống link file /f/<mã> (vốn đã cho tải cả card).
+function publicCardRow(id) {
+  const row = ID_RE.test(id) ? files.findById(id) : null;
+  return row && row.category === 'card' ? row : null;
+}
+
+async function handlePublicRead(req, res, id) {
+  rateLimit(`read:${clientIp(req)}`, 120, 60 * 1000);
+  const row = publicCardRow(id);
+  const card = row && (await loadCard(row));
+  if (!card) throw new HttpError(404, 'Card không tồn tại hoặc đã bị xoá');
+  const file = toClient(row);
+  sendJson(res, 200, {
+    ...readableCard(card),
+    creator: file.card?.creator || '',
+    file: { name: file.name, ext: file.ext, size: file.size, url: file.url },
+  });
+}
+
 async function handleCardEmbed(req, res, user, id, key, url) {
   const { row, card } = await userCard(user, id);
   let item;
@@ -291,6 +310,9 @@ async function handleApi(req, res, pathname, url) {
     return cm[2] ? handleCardEmbed(req, res, user, cm[1], cm[2], url) : handleCardInfo(req, res, user, cm[1]);
   }
 
+  const pr = /^\/api\/read\/([a-z0-9]{6})$/.exec(pathname);
+  if (pr && method === 'GET') return handlePublicRead(req, res, pr[1]);
+
   const rm = /^\/api\/files\/([a-z0-9]{6})\/read$/.exec(pathname);
   if (rm && method === 'GET') return handleCardRead(req, res, requireUser(req), rm[1]);
 
@@ -323,27 +345,64 @@ async function handlePublicFile(req, res, pathname, url) {
   if (!served) throw new HttpError(404, 'File không tồn tại trên ổ đĩa');
 }
 
-/** index.html với link CSS/JS kèm ?v=<mtime> -> trình duyệt luôn tải bản mới sau mỗi lần cập nhật. */
-async function sendIndex(res) {
-  const html = await fsp.readFile(path.join(config.paths.public, 'index.html'), 'utf8');
+const escapeHtml = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+/** Gắn ?v=<mtime> vào link CSS/JS -> trình duyệt luôn tải bản mới sau mỗi lần cập nhật. */
+async function bustCache(html) {
   const parts = await Promise.all(html.split(/((?:href|src)="\/(?:css|js)\/[\w.-]+\.(?:css|js))"/).map(async (part, i) => {
     if (i % 2 === 0) return part;
     const [, attr, rel] = part.match(/^(\w+)="\/(.+)$/);
     const stat = await fsp.stat(path.join(config.paths.public, rel)).catch(() => null);
     return `${attr}="/${rel}${stat ? `?v=${Math.floor(stat.mtimeMs).toString(36)}` : ''}"`;
   }));
-  res.writeHead(200, {
+  return parts.join('');
+}
+
+function sendHtml(res, status, html) {
+  res.writeHead(status, {
     'Content-Type': 'text/html; charset=utf-8',
     'Cache-Control': 'no-cache',
     'Content-Security-Policy': APP_CSP,
     'X-Frame-Options': 'DENY',
   });
-  res.end(parts.join(''));
+  res.end(html);
   return true;
+}
+
+const readPublic = (name) => fsp.readFile(path.join(config.paths.public, name), 'utf8');
+
+async function sendIndex(res) {
+  return sendHtml(res, 200, await bustCache(await readPublic('index.html')));
+}
+
+/** Trang đọc card /r/<mã>: điền tiêu đề + thẻ Open Graph (để Discord/Facebook hiện ảnh và tên), lấy bộ icon từ index.html. */
+async function sendReadPage(req, res, id) {
+  const row = publicCardRow(id);
+  const summary = row ? toClient(row).card : null;
+  const [page, index] = await Promise.all([readPublic('read.html'), readPublic('index.html')]);
+  const icons = index.match(/<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" hidden>[\s\S]*?<\/svg>/)?.[0] || '';
+  const base = config.publicUrl || `http://${req.headers.host || 'localhost'}`;
+  const name = summary?.name || 'Không tìm thấy card';
+  const c = summary?.counts;
+  const description = summary
+    ? [summary.creator && `Card của ${summary.creator}`, c.lorebook && `${c.lorebook} mục lorebook`, c.greetings && `${c.greetings} lời chào`,
+      c.regex && `${c.regex} regex`].filter(Boolean).join(' · ') || 'Character card SillyTavern'
+    : 'Card không tồn tại hoặc đã bị xoá';
+  const vars = {
+    title: escapeHtml(`${name} · ${config.siteName}`),
+    name: escapeHtml(name),
+    description: escapeHtml(description),
+    siteName: escapeHtml(config.siteName),
+    ogImage: row?.ext === 'png' ? `<meta property="og:image" content="${escapeHtml(`${base}/f/${row.id}.png`)}">` : '',
+    icons,
+  };
+  const html = page.replace(/\{\{(\w+)\}\}/g, (all, key) => (key in vars ? vars[key] : all));
+  return sendHtml(res, row ? 200 : 404, await bustCache(html));
 }
 
 async function handleStatic(req, res, pathname) {
   if (pathname === '/' || pathname === '/index.html') return sendIndex(res);
+  if (pathname === '/read.html') return false; // chỉ dùng qua /r/<mã>
   const rel = pathname.slice(1);
   const abs = path.resolve(config.paths.public, rel);
   if (!abs.startsWith(config.paths.public + path.sep)) return false;
@@ -380,6 +439,8 @@ const server = http.createServer(async (req, res) => {
     if (pathname.startsWith('/api/')) return await handleApi(req, res, pathname, url);
     if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'Method không được hỗ trợ');
     if (pathname.startsWith('/f/')) return await handlePublicFile(req, res, pathname, url);
+    const rp = /^\/r\/([a-z0-9]{6})\/?$/.exec(pathname);
+    if (rp) return await sendReadPage(req, res, rp[1]);
     if (await handleStatic(req, res, pathname)) return;
     throw new HttpError(404, 'Không tìm thấy trang');
   } catch (err) {
