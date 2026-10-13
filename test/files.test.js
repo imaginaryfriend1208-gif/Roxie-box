@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { extOf, detect, sanitizeName, randomId, ID_RE, publicPath, toClient } from '../lib/files.js';
-import { readPngText, parseCard, stripPngText, toWorldInfo, collectEmbeds, summarize, describeCard, findEmbed, safeFileName } from '../lib/card.js';
+import { readPngText, parseCard, stripPngText, toWorldInfo, collectEmbeds, summarize, describeCard, findEmbed, safeFileName, readableCard } from '../lib/card.js';
 
 test('extOf: lấy đuôi file, chữ thường', () => {
   assert.equal(extOf('Anh.PNG'), 'png');
@@ -175,6 +175,40 @@ test('collectEmbeds / summarize: liệt kê đủ nội dung nhúng', () => {
   const desc = describeCard(card, { png: true });
   assert.equal(desc.embeds[1].key, 'avatar');
   assert.ok(desc.embeds.every((e) => !('build' in e)));
+});
+
+test('readableCard: tách nội dung để đọc (lorebook, lời chào, regex, script)', () => {
+  const img = `data:image/png;base64,${'A'.repeat(80)}`;
+  const card = v2({
+    description: `Mô tả ${img}`,
+    alternate_greetings: ['Chào 2', ''],
+    character_book: { name: 'Sổ', entries: [
+      { id: 7, comment: 'Sau', keys: ['b'], content: 'nội dung b', insertion_order: '<b>', extensions: { display_index: 1, position: 4, depth: 2, role: 1 } },
+      { comment: 'Trước', keys: ['a', ''], secondary_keys: ['c'], content: 'a', constant: true, enabled: false,
+        extensions: { display_index: 0, selectiveLogic: 3, probability: 40 } },
+    ] },
+    extensions: {
+      regex_scripts: [{ scriptName: 'R', findRegex: '/x/g', replaceString: 'y', disabled: true }],
+      tavern_helper: { scripts: [{ name: 'S', content: 'js', enabled: false }] },
+      depth_prompt: { prompt: 'ghi chú', depth: 3 },
+    },
+  });
+  const r = readableCard(card);
+  assert.equal(r.name, 'Roxie');
+  assert.deepEqual(r.fields.map((f) => f.key), ['description', 'depth_prompt']);
+  assert.equal(r.fields[0].text, 'Mô tả [ảnh nhúng]');
+  assert.deepEqual(r.greetings.map((g) => g.title), ['Lời chào đầu', 'Lời chào thay thế 1']);
+
+  assert.equal(r.lorebook.name, 'Sổ');
+  const [a, b] = r.lorebook.entries;
+  assert.deepEqual([a.title, a.keys, a.secondary, a.logic, a.mode, a.enabled, a.probability, a.position],
+    ['Trước', ['a'], ['c'], 'AND ALL', 'constant', false, 40, 'Sau char']);
+  assert.deepEqual([b.uid, b.title, b.mode, b.order, b.position], [7, 'Sau', 'normal', 100, 'Độ sâu 2 (user)']);
+  assert.ok(!('sort' in a));
+
+  assert.deepEqual(r.regex, [{ name: 'R', find: '/x/g', replace: 'y', disabled: true }]);
+  assert.deepEqual(r.scripts.map((s) => [s.name, s.content, s.enabled]), [['S', 'js', false]]);
+  assert.equal(readableCard(v2({ first_mes: '' })).lorebook, null);
 });
 
 test('safeFileName: bỏ ký tự cấm trong tên file', () => {

@@ -13,7 +13,7 @@ import {
 import { detect, sanitizeName, randomId, diskPath, toClient, ID_RE } from './lib/files.js';
 import { HttpError, sendJson, readJson, clientIp, serveFile } from './lib/http.js';
 import {
-  inspectCardFile, summarize, describeCard, findEmbed, avatarEmbed, stripPngText, parseCard, CARD_EXT, MAX_CARD_BYTES,
+  inspectCardFile, summarize, describeCard, findEmbed, readableCard, avatarEmbed, stripPngText, parseCard, CARD_EXT, MAX_CARD_BYTES,
 } from './lib/card.js';
 
 fs.mkdirSync(config.paths.storage, { recursive: true });
@@ -215,6 +215,11 @@ async function handleCardInfo(_req, res, user, id) {
   sendJson(res, 200, describeCard(card, { png: row.ext === 'png' }));
 }
 
+async function handleCardRead(_req, res, user, id) {
+  const { card } = await userCard(user, id);
+  sendJson(res, 200, readableCard(card));
+}
+
 async function handleCardEmbed(req, res, user, id, key, url) {
   const { row, card } = await userCard(user, id);
   let item;
@@ -285,6 +290,9 @@ async function handleApi(req, res, pathname, url) {
     const user = requireUser(req);
     return cm[2] ? handleCardEmbed(req, res, user, cm[1], cm[2], url) : handleCardInfo(req, res, user, cm[1]);
   }
+
+  const rm = /^\/api\/files\/([a-z0-9]{6})\/read$/.exec(pathname);
+  if (rm && method === 'GET') return handleCardRead(req, res, requireUser(req), rm[1]);
 
   const m = /^\/api\/files\/([a-z0-9]{6})$/.exec(pathname);
   if (m) {
