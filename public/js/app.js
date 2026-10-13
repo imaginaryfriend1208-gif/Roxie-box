@@ -1071,10 +1071,11 @@ async function loadEmbeds(f) {
 }
 
 // =============================================================================
-// Đọc card: lorebook, lời chào, mô tả, regex & script
+// Đọc card: lorebook, lời chào, mô tả, regex & script (danh sách trái, nội dung phải)
 // =============================================================================
 
 let readerFile = null;
+let readerData = null; // { tabs: { key: { items, searchable?, summary? } }, tab, index }
 let readerSearchTimer = 0;
 
 const READER_TABS = [
@@ -1091,36 +1092,17 @@ const LORE_MODE = {
 };
 
 const readerText = (text) => `<pre class="reader-text">${escapeHtml(text)}</pre>`;
-const charCount = (text) => `<span class="rx-meta">${text.length.toLocaleString('vi-VN')} ký tự</span>`;
+const charCount = (text) => `${text.length.toLocaleString('vi-VN')} ký tự`;
 const keyChips = (keys) => keys.map((k) => `<span class="reader-key">${escapeHtml(k)}</span>`).join('');
+const OFF_BADGE = '<span class="badge badge--error">Đang tắt</span>';
 
-/** Một mục mở/đóng được; `copyIndex` trỏ vào `el.readerBody.copies` để nút Copy lấy đúng nội dung. */
-function readerItemHtml({ title, badges = '', sub = '', body, open = false, copyIndex }) {
-    const copy = copyIndex == null ? '' : `
-        <div class="reader-item-tools" data-copy-index="${copyIndex}">
-            <button type="button" class="btn btn--sm" data-reader-copy aria-label="Copy ${escapeHtml(title)}">${icon('i-copy')}<span>Copy</span></button>
-        </div>`;
-    return `
-        <details class="reader-item"${open ? ' open' : ''}>
-            <summary>
-                <span class="reader-item-head">
-                    <span class="reader-item-title">${escapeHtml(title)}</span>
-                    ${badges ? `<span class="reader-badges">${badges}</span>` : ''}
-                </span>
-                ${sub ? `<span class="reader-item-sub">${sub}</span>` : ''}
-            </summary>
-            <div class="reader-item-body">${copy}${body}</div>
-        </details>`;
-}
-
-function loreEntryHtml(e, copyIndex) {
+/**
+ * Mỗi mục gồm: `title`, `badges` + `sub` (chữ thuần) cho danh sách trái;
+ * `head` + `body` (HTML đã escape) cho cột phải; `copy` cho nút Copy; `search` cho ô tìm.
+ */
+function loreItem(e) {
     const [modeLabel, modeClass] = LORE_MODE[e.mode] || LORE_MODE.normal;
-    const badges = [
-        e.enabled ? '' : '<span class="badge badge--error">Đang tắt</span>',
-        `<span class="badge ${modeClass}">${modeLabel}</span>`,
-        `<span class="badge badge--muted">${escapeHtml(e.position)}</span>`,
-    ].join('');
-    const more = e.keys.length > 8 ? `<span class="reader-key reader-key--more">+${e.keys.length - 8}</span>` : '';
+    const mode = `<span class="badge ${modeClass}">${modeLabel}</span>`;
     const meta = [
         e.keys.length ? `<dt>Từ khoá</dt><dd class="reader-keys">${keyChips(e.keys)}</dd>` : '',
         e.secondary.length ? `<dt>Từ khoá phụ (${escapeHtml(e.logic)})</dt><dd class="reader-keys">${keyChips(e.secondary)}</dd>` : '',
@@ -1130,102 +1112,158 @@ function loreEntryHtml(e, copyIndex) {
         e.group ? `<dt>Nhóm</dt><dd>${escapeHtml(e.group)}</dd>` : '',
         `<dt>Độ dài</dt><dd>${charCount(e.content)}</dd>`,
     ].join('');
-    return readerItemHtml({
+    return {
         title: e.title || `Mục #${e.uid}`,
-        badges,
-        sub: e.keys.length ? keyChips(e.keys.slice(0, 8)) + more : '',
+        off: !e.enabled,
+        badges: mode,
+        sub: e.keys.length ? e.keys.join(', ') : e.position,
+        head: `${e.enabled ? '' : OFF_BADGE}${mode}<span class="badge badge--muted">${escapeHtml(e.position)}</span>`,
         body: `<dl class="reader-meta">${meta}</dl>${e.content ? readerText(e.content) : '<p class="rx-meta">Mục này không có nội dung.</p>'}`,
-        copyIndex,
-    });
+        copy: e.content,
+        search: [e.title, ...e.keys, ...e.secondary, e.content].join('\n').toLowerCase(),
+    };
 }
 
-function readerPanels(data) {
-    const copies = [];
-    const keep = (text) => copies.push(text) - 1;
-    const panels = {};
+const textItem = ({ title, text }) => ({
+    title,
+    sub: charCount(text),
+    head: `<span class="rx-meta">${charCount(text)}</span>`,
+    body: readerText(text),
+    copy: text,
+});
 
+function readerTabsOf(data) {
+    const tabs = {};
     const entries = data.lorebook?.entries || [];
     if (entries.length) {
         const on = entries.filter((e) => e.enabled).length;
-        const base = `${data.lorebook.name ? `${data.lorebook.name} · ` : ''}${entries.length} mục · ${on} đang bật`;
-        panels.lore = {
-            count: entries.length,
-            html: `
-                <div class="reader-toolbar">
-                    <div class="search reader-search">
-                        <svg class="icon search-icon" aria-hidden="true"><use href="#i-search"/></svg>
-                        <label class="sr-only" for="reader-search">Tìm trong lorebook</label>
-                        <input id="reader-search" type="search" class="input search-input" autocomplete="off"
-                               placeholder="Tìm theo tên mục, từ khoá hoặc nội dung…">
-                    </div>
-                    <button type="button" class="btn btn--sm" data-reader-expand="1">Mở hết</button>
-                    <button type="button" class="btn btn--sm" data-reader-expand="0">Thu gọn</button>
-                </div>
-                <p class="rx-meta reader-summary" aria-live="polite" data-base="${escapeHtml(base)}">${escapeHtml(base)}</p>
-                <div class="reader-list" data-lore-list>${entries.map((e) => loreEntryHtml(e, keep(e.content))).join('')}</div>
-                <p class="rx-meta reader-empty" hidden>Không có mục nào khớp.</p>`,
-            haystack: entries.map((e) => [e.title, ...e.keys, ...e.secondary, e.content].join('\n').toLowerCase()),
+        tabs.lore = {
+            items: entries.map(loreItem),
+            searchable: true,
+            summary: `${data.lorebook.name ? `${data.lorebook.name} · ` : ''}${entries.length} mục · ${on} đang bật`,
         };
     }
+    if (data.greetings.length) tabs.greetings = { items: data.greetings.map(textItem) };
+    if (data.fields.length) tabs.info = { items: data.fields.map((f) => textItem({ title: f.label, text: f.text })) };
 
-    const textList = (items) => `<div class="reader-list">${items.map((it, i) => readerItemHtml({
-        title: it.title,
-        sub: charCount(it.text),
-        body: readerText(it.text),
-        open: i === 0,
-        copyIndex: keep(it.text),
-    })).join('')}</div>`;
-
-    if (data.greetings.length) panels.greetings = { count: data.greetings.length, html: textList(data.greetings) };
-    if (data.fields.length) {
-        panels.info = { count: data.fields.length, html: textList(data.fields.map((f) => ({ title: f.label, text: f.text }))) };
-    }
-
+    const regexBadge = `<span class="badge">${icon('i-regex')}Regex</span>`;
+    const scriptBadge = `<span class="badge">${icon('i-code')}Script</span>`;
     const code = [
-        ...data.regex.map((r) => readerItemHtml({
+        ...data.regex.map((r) => ({
             title: r.name,
-            badges: `<span class="badge">${icon('i-regex')}Regex</span>${r.disabled ? '<span class="badge badge--error">Đang tắt</span>' : ''}`,
+            off: r.disabled,
+            badges: regexBadge,
+            sub: r.find,
+            head: `${r.disabled ? OFF_BADGE : ''}${regexBadge}`,
             body: `<h4 class="reader-label">Tìm</h4>${readerText(r.find)}
                    <h4 class="reader-label">Thay bằng</h4>${r.replace ? readerText(r.replace) : '<p class="rx-meta">(xoá phần khớp)</p>'}`,
-            copyIndex: keep(r.find),
+            copy: r.find,
         })),
-        ...data.scripts.map((sc) => readerItemHtml({
+        ...data.scripts.map((sc) => ({
             title: sc.name,
-            badges: `<span class="badge">${icon('i-code')}Script</span>${sc.enabled ? '' : '<span class="badge badge--error">Đang tắt</span>'}`,
+            off: !sc.enabled,
+            badges: scriptBadge,
+            sub: sc.info || charCount(sc.content),
+            head: `${sc.enabled ? '' : OFF_BADGE}${scriptBadge}`,
             body: `${sc.info ? `<p class="reader-info">${escapeHtml(sc.info)}</p>` : ''}${readerText(sc.content)}`,
-            copyIndex: keep(sc.content),
+            copy: sc.content,
         })),
     ];
-    if (code.length) panels.code = { count: code.length, html: `<div class="reader-list">${code.join('')}</div>` };
-
-    return { panels, copies };
+    if (code.length) tabs.code = { items: code };
+    return tabs;
 }
 
+const readerNavHtml = (items) => items.map((it, i) => `
+    <button type="button" class="reader-nav-item" data-index="${i}" aria-current="false">
+        <span class="reader-nav-top">
+            <span class="reader-nav-title">${escapeHtml(it.title)}</span>
+            ${it.off || it.badges ? `<span class="reader-badges">${it.off ? OFF_BADGE : ''}${it.badges || ''}</span>` : ''}
+        </span>
+        ${it.sub ? `<span class="reader-nav-sub">${escapeHtml(it.sub)}</span>` : ''}
+    </button>`).join('');
+
 function selectReaderTab(key, focus = false) {
+    readerData.tab = key;
     for (const tab of el.readerTabs.querySelectorAll('[role="tab"]')) {
         const on = tab.dataset.tab === key;
         tab.setAttribute('aria-selected', String(on));
         tab.tabIndex = on ? 0 : -1;
         if (on && focus) tab.focus();
     }
-    for (const panel of el.readerBody.querySelectorAll('[role="tabpanel"]')) panel.hidden = panel.dataset.tab !== key;
-    el.readerBody.scrollTop = 0;
+    const t = readerData.tabs[key];
+    const search = t.searchable ? `
+        <div class="search reader-search">
+            <svg class="icon search-icon" aria-hidden="true"><use href="#i-search"/></svg>
+            <label class="sr-only" for="reader-search">Tìm trong lorebook</label>
+            <input id="reader-search" type="search" class="input search-input" autocomplete="off"
+                   placeholder="Tìm tên, từ khoá, nội dung…">
+        </div>
+        <p class="rx-meta reader-summary" aria-live="polite">${escapeHtml(t.summary)}</p>` : '';
+    el.readerBody.innerHTML = `
+        <div class="reader-split" role="tabpanel" id="reader-panel" aria-labelledby="reader-tab-${key}">
+            <aside class="reader-side">
+                ${search}
+                <nav class="reader-nav" aria-label="Danh sách mục">${readerNavHtml(t.items)}</nav>
+                <p class="rx-meta reader-empty" hidden>Không có mục nào khớp.</p>
+            </aside>
+            <section class="reader-view" aria-label="Nội dung mục"></section>
+        </div>`;
+    $('#reader-search', el.readerBody)?.addEventListener('input', () => {
+        clearTimeout(readerSearchTimer);
+        readerSearchTimer = setTimeout(filterReader, 120);
+    });
+    selectReaderItem(0, { show: false });
 }
 
-function filterLore(panel, haystack) {
-    const q = $('#reader-search', panel).value.trim().toLowerCase();
+/** Hiện mục thứ `index` ở cột phải. `show` = trên điện thoại chuyển sang màn nội dung. */
+function selectReaderItem(index, { show = true, focus = false } = {}) {
+    const it = readerData.tabs[readerData.tab].items[index];
+    const view = $('.reader-view', el.readerBody);
+    if (!it || !view) return;
+    readerData.index = index;
+    for (const btn of el.readerBody.querySelectorAll('.reader-nav-item')) {
+        const on = Number(btn.dataset.index) === index;
+        btn.setAttribute('aria-current', String(on));
+        if (on && focus) {
+            btn.focus();
+            btn.scrollIntoView({ block: 'nearest' });
+        }
+    }
+    view.innerHTML = `
+        <div class="reader-view-head">
+            <button type="button" class="btn btn--sm reader-back" data-reader-back>${icon('i-arrow-left')}<span>Danh sách</span></button>
+            <h3 class="reader-view-title">${escapeHtml(it.title)}</h3>
+            <div class="reader-view-tools">
+                <span class="reader-badges">${it.head || ''}</span>
+                <button type="button" class="btn btn--sm" data-reader-copy aria-label="Copy nội dung ${escapeHtml(it.title)}">${icon('i-copy')}<span>Copy</span></button>
+            </div>
+        </div>
+        <div class="reader-view-body">${it.body}</div>`;
+    view.scrollTop = 0;
+    $('.reader-split', el.readerBody).classList.toggle('is-viewing', show);
+}
+
+function filterReader() {
+    const t = readerData.tabs[readerData.tab];
+    const q = $('#reader-search', el.readerBody)?.value.trim().toLowerCase() || '';
     let shown = 0;
-    panel.querySelectorAll('[data-lore-list] > .reader-item').forEach((item, i) => {
-        item.hidden = Boolean(q) && !haystack[i].includes(q);
-        if (!item.hidden) shown += 1;
-    });
-    const summary = $('.reader-summary', panel);
-    summary.textContent = q ? `Tìm thấy ${shown} / ${haystack.length} mục` : summary.dataset.base;
-    $('.reader-empty', panel).hidden = shown > 0;
+    let first = -1;
+    for (const btn of el.readerBody.querySelectorAll('.reader-nav-item')) {
+        const i = Number(btn.dataset.index);
+        btn.hidden = Boolean(q) && !t.items[i].search.includes(q);
+        if (btn.hidden) continue;
+        shown += 1;
+        if (first < 0) first = i;
+    }
+    $('.reader-summary', el.readerBody).textContent = q ? `Tìm thấy ${shown} / ${t.items.length} mục` : t.summary;
+    $('.reader-empty', el.readerBody).hidden = shown > 0;
+    const current = el.readerBody.querySelector(`.reader-nav-item[data-index="${readerData.index}"]`);
+    if (first >= 0 && current?.hidden) selectReaderItem(first, { show: false });
 }
 
 async function openReader(f) {
     readerFile = f;
+    readerData = null;
     el.readerTitle.textContent = f.card?.name || f.name;
     el.readerTabs.replaceChildren();
     el.readerBody.innerHTML = '<p class="rx-meta reader-status">Đang đọc nội dung card…</p>';
@@ -1241,34 +1279,24 @@ async function openReader(f) {
     if (readerFile?.id !== f.id) return;
 
     el.readerTitle.textContent = data.name || f.name;
-    const { panels, copies } = readerPanels(data);
-    const tabs = READER_TABS.filter(([key]) => panels[key]);
-    if (!tabs.length) {
+    const tabs = readerTabsOf(data);
+    const keys = READER_TABS.filter(([key]) => tabs[key]);
+    if (!keys.length) {
         el.readerBody.innerHTML = '<p class="rx-meta reader-status">Card này không có nội dung để đọc.</p>';
         return;
     }
-
-    el.readerTabs.innerHTML = tabs.map(([key, ic, label]) => `
+    readerData = { tabs, tab: keys[0][0], index: 0 };
+    el.readerTabs.innerHTML = keys.map(([key, ic, label]) => `
         <button type="button" role="tab" class="tab reader-tab" id="reader-tab-${key}" data-tab="${key}"
-                aria-controls="reader-panel-${key}" aria-selected="false" tabindex="-1">
-            ${icon(ic)}<span>${label}</span><span class="nav-count">${panels[key].count}</span>
+                aria-controls="reader-panel" aria-selected="false" tabindex="-1">
+            ${icon(ic)}<span>${label}</span><span class="nav-count">${tabs[key].items.length}</span>
         </button>`).join('');
-    el.readerBody.innerHTML = tabs.map(([key]) => `
-        <section role="tabpanel" class="reader-panel" id="reader-panel-${key}" data-tab="${key}"
-                 aria-labelledby="reader-tab-${key}" hidden>${panels[key].html}</section>`).join('');
-    el.readerBody.copies = copies;
-
-    const lore = $('#reader-panel-lore', el.readerBody);
-    lore?.querySelector('#reader-search').addEventListener('input', () => {
-        clearTimeout(readerSearchTimer);
-        readerSearchTimer = setTimeout(() => filterLore(lore, panels.lore.haystack), 120);
-    });
-    selectReaderTab(tabs[0][0]);
+    selectReaderTab(keys[0][0]);
 }
 
 el.readerTabs.addEventListener('click', (e) => {
     const tab = e.target.closest('[role="tab"]');
-    if (tab) selectReaderTab(tab.dataset.tab);
+    if (tab && readerData) selectReaderTab(tab.dataset.tab);
 });
 el.readerTabs.addEventListener('keydown', (e) => {
     const tabs = [...el.readerTabs.querySelectorAll('[role="tab"]')];
@@ -1280,27 +1308,39 @@ el.readerTabs.addEventListener('keydown', (e) => {
 });
 
 el.readerBody.addEventListener('click', async (e) => {
-    const expand = e.target.closest('[data-reader-expand]');
-    if (expand) {
-        const open = expand.dataset.readerExpand === '1';
-        for (const item of expand.closest('.reader-panel').querySelectorAll('.reader-item')) {
-            if (!item.hidden) item.open = open;
-        }
+    const item = e.target.closest('.reader-nav-item');
+    if (item) {
+        selectReaderItem(Number(item.dataset.index));
+        return;
+    }
+    if (e.target.closest('[data-reader-back]')) {
+        $('.reader-split', el.readerBody)?.classList.remove('is-viewing');
+        el.readerBody.querySelector('.reader-nav-item[aria-current="true"]')?.focus();
         return;
     }
     const copy = e.target.closest('[data-reader-copy]');
-    if (!copy) return;
-    const text = el.readerBody.copies?.[Number(copy.parentElement.dataset.copyIndex)] ?? '';
+    if (!copy || !readerData) return;
+    const text = readerData.tabs[readerData.tab].items[readerData.index]?.copy ?? '';
     if (await copyText(text)) flashCopied(copy);
     else toast('error', 'Không copy được');
+});
+
+// Mũi tên lên/xuống trong danh sách để chuyển mục
+el.readerBody.addEventListener('keydown', (e) => {
+    if ((e.key !== 'ArrowDown' && e.key !== 'ArrowUp') || !e.target.closest('.reader-nav-item')) return;
+    const visible = [...el.readerBody.querySelectorAll('.reader-nav-item:not([hidden])')];
+    const next = visible[visible.indexOf(e.target.closest('.reader-nav-item')) + (e.key === 'ArrowDown' ? 1 : -1)];
+    if (!next) return;
+    e.preventDefault();
+    selectReaderItem(Number(next.dataset.index), { show: false, focus: true });
 });
 
 el.reader.addEventListener('close', () => {
     clearTimeout(readerSearchTimer);
     el.readerTabs.replaceChildren();
     el.readerBody.replaceChildren();
-    el.readerBody.copies = null;
     readerFile = null;
+    readerData = null;
 });
 
 el.detailCopy.addEventListener('click', () => {
